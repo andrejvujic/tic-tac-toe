@@ -1,180 +1,214 @@
-var board_size = 11; // Game board size in blocks
-var x_direction = 0; // Horizontal movement
-var y_direction = 0; // Vertical movement
-var grid = []; // Contains game board blocks
-var snake_parts = []; // Contains snake parts
-var alive = true; // Is the player alive or not
+var columns;
+var players = { true: "X", false: "O" };
+var players_names = { true: "X", false: "O" };
+var current_player;
 
 document.addEventListener("DOMContentLoaded", function () {
-  // Start the game on intial load
-  create_fields(); // Creates grid array
-  create_apple(); // Generates an apple at a random position
-
-  document.addEventListener("keydown", key_pressed);
-  set_score(0); // Set the intial score to 0
-  draw(); // Start the game
+  get_columns(); // Creates column array
+  update_current_player(); //  Updates the current player text
 });
 
-function create_fields() {
-  // Creates grid array
-  var game_board = document.getElementsByClassName("main-game-board")[0];
+function get_columns() {
+  var columns = document.getElementsByClassName("column");
+  for (var i = 0; i < columns.length; i++) {
+    var column = columns[i];
 
-  for (var i = 0; i < board_size; i++) {
-    var row = document.createElement("div");
-    var grid_row = [];
-
-    row.classList.add(`game-board-row`);
-    game_board.appendChild(row);
-
-    for (var j = 0; j < board_size; j++) {
-      var column = document.createElement("div");
-      column.classList.add("game-board-column");
-      column.classList.add("disable-selection");
-
-      if (i == 5 && j == 5) {
-        // Places the snake in the center when game starts
-        column.classList.add("game-snake-part");
-        snake_parts.push(column);
-      }
-      column.innerText = `${j}`;
-
-      row.appendChild(column);
-      grid_row.push(column);
-    }
-
-    grid.push(grid_row);
+    column.addEventListener("click", clicked_field); // Adds click listener to block
+    column.innerText = "?";
   }
 }
 
-function create_apple() {
-  var x_apple = Math.floor(Math.random() * board_size); // Random x (0 to board_size)
-  var y_apple = Math.floor(Math.random() * board_size); // Random y (0 to board_size)
+function clicked_field(event) {
+  target_field = event.target;
+  if (
+    !target_field.classList.contains("column") ||
+    target_field.classList.contains("unavalible")
+  ) {
+    return; // If the user didn't click on an avalible block return
+  }
 
-  if (grid[y_apple][x_apple].classList.contains("game-snake-part")) {
-    // If the x and y belong to the snake, generate new ones
-    create_apple();
+  target_field.style.color = "black";
+  target_field.innerText = players[current_player]; // Sets the block text to the player which clicked
+  target_field.classList.add("unavalible"); // Marks the block as unavalible so it can't be clicked on
+
+  update_current_player(); // Update the current player text
+  check_win(); // Checks if someone won
+  check_full_board(); // Checks if the board is fully filled
+}
+
+function update_current_player() {
+  current_player = !current_player;
+  var player_container = document.getElementsByClassName(
+    "information-current-player"
+  )[0];
+  player_container.innerText = `Trenutni Igrač: ${players_names[current_player]}`;
+}
+
+function check_win() {
+  var fields = get_fields(); // Gets bame board blocks
+  var row_winner = check_rows(fields); // Checks all rows
+  if (row_winner[0]) {
+    set_winner(row_winner[0]); // index 0 contains player name
+    animate_fields(row_winner[1]); // index 1 contains winning blocks
+  }
+
+  var column_winner = check_columns(fields); // Checks all columns
+  if (column_winner[0]) {
+    set_winner(column_winner[0]);
+    animate_fields(column_winner[1]);
+  }
+
+  var diagonal_winner = check_diagonals(fields); // Checks first diagonal
+  if (diagonal_winner[0]) {
+    set_winner(diagonal_winner[0]);
+    animate_fields(diagonal_winner[1]);
+  }
+
+  diagonal_winner = check_diagonals(fields.reverse()); // Checks second diagonal
+  if (diagonal_winner[0]) {
+    set_winner(diagonal_winner[0]);
+    animate_fields(diagonal_winner[1]);
+  }
+}
+
+function get_fields() {
+  // Get all game board blocks
+  var rows = [];
+
+  for (var i = 0; i < 3; i++) {
+    rows.push(document.getElementsByClassName(`board-row-${i + 1}`)[0]);
+  }
+
+  var fields = [];
+  for (var i = 0; i < rows.length; i++) {
+    fields.push(rows[i].getElementsByClassName("column"));
+  }
+  return fields;
+}
+
+function check_full_board() {
+  // If the board is fully filled, end the game as a draw
+  var unavalible_fields = document.getElementsByClassName("unavalible");
+  if (unavalible_fields.length == 9) {
+    set_winner("Nema pobjednika!");
+  }
+}
+
+function check_rows(fields) {
+  for (var i = 0; i < 3; i++) {
+    var field = fields[i];
+    if (field[0].innerText == "?") {
+      continue;
+    }
+    if (
+      field[0].innerText == field[1].innerText &&
+      field[0].innerText == field[2].innerText
+    ) {
+      return [field[0].innerText, [field[0], field[1], field[2]]];
+    }
+  }
+
+  return [false, []];
+}
+
+function check_columns(fields) {
+  for (var i = 0; i < 3; i++) {
+    var column1 = fields[0][i];
+    var column2 = fields[1][i];
+    var column3 = fields[2][i];
+
+    if (column1.innerText == "?") {
+      continue;
+    }
+
+    if (
+      column1.innerText == column2.innerText &&
+      column1.innerText == column3.innerText
+    ) {
+      return [column1.innerText, [column1, column2, column3]];
+    }
+  }
+
+  return [false, []];
+}
+
+function check_diagonals(fields) {
+  var diagonal;
+  var digaonal_fields = [];
+
+  diagonal = "";
+  for (var i = 0; i < 3; i++) {
+    diagonal += fields[i][i].innerText;
+    digaonal_fields.push(fields[i][i]);
+  }
+  if (diagonal == "XXX" || diagonal == "OOO") {
+    return [diagonal.substring(0, 1), digaonal_fields];
+  }
+
+  return [false, []];
+}
+
+function set_winner(game_winner) {
+  // Sets winner text
+  var game_information = document.getElementsByClassName(
+    "main-game-information"
+  )[0];
+
+  var player_container = document.getElementsByClassName(
+    "information-current-player"
+  )[0];
+  game_information.removeChild(player_container);
+
+  var win_container = document.createElement("div");
+  win_container.classList.add("information-winner");
+  game_information.appendChild(win_container);
+
+  var winner = document.createElement("p");
+  if (game_winner != "Nema pobjednika!") {
+    winner.innerText = `${game_winner} je pobjednik!`;
   } else {
-    // Creates the apple at the x and y
-    grid[y_apple][x_apple].classList.add("game-apple");
+    winner.innerText = `${game_winner}`;
   }
-}
 
-function check_apple() {
-  // Checks if the player ate the apple
-  var apple = document.getElementsByClassName("game-apple")[0];
-  if (apple.classList.contains("game-snake-part")) {
-    apple.classList.remove("game-apple");
-    update_score(); // Increase score by 1
-    create_apple(); // Create new apple
-    increase_snake(); // Increase snake length by 1
-  }
-}
+  win_container.appendChild(winner);
 
-function key_pressed(event) {
-  // Handles keyboard input
-  var target_key = event.key.toUpperCase();
-
-  if (target_key == "A" && x_direction == 0) {
-    // Move horizontally to the left
-    x_direction = -1;
-    y_direction = 0;
-  } else if (target_key == "D" && x_direction == 0) {
-    // Move horizontally to the right
-    x_direction = 1;
-    y_direction = 0;
-  } else if (target_key == "S" && y_direction == 0) {
-    // Move vertically down
-    y_direction = 1;
-    x_direction = 0;
-  } else if (target_key == "W" && y_direction == 0) {
-    // Move vertically up
-    y_direction = -1;
-    x_direction = 0;
-  }
-}
-
-function move_snake() {
-  // Handles snake movement
-  var snake_head = snake_parts[0];
-  for (var y = 0; y < board_size; y++) {
-    for (var x = 0; x < board_size; x++) {
-      var field = grid[y][x];
-      if (field == snake_head) {
-        if (
-          // Checks if the next snake position is valid
-          x + x_direction >= 0 &&
-          x + x_direction < board_size &&
-          y + y_direction >= 0 &&
-          y + y_direction < board_size
-        ) {
-          snake_parts[snake_parts.length - 1].classList.remove(
-            "game-snake-part"
-          );
-          snake_parts.pop();
-
-          var new_snake_part = grid[y + y_direction][x + x_direction];
-          if (new_snake_part.classList.contains("game-snake-part")) {
-            // Checks if the snake ate itself
-            game_over();
-          }
-          new_snake_part.classList.add("game-snake-part");
-          snake_parts.splice(0, 0, new_snake_part);
-
-          return;
-        } else {
-          // If the position is not valid end the game
-          game_over();
-        }
-      }
-    }
-  }
-}
-
-function increase_snake() {
-  // Handles snake growth
-  snake_parts.push(grid[0][0]);
-}
-
-function game_over() {
-  // Handles game over
-  alive = false; // Disables snake movement
-  document.removeEventListener("keydown", key_pressed); // Disables keyboard input
-  x_direction = 0; // Stops horizontal movement
-  y_direction = 0; // Stops vertical movement
-
-  var game_score = document.getElementsByClassName("main-game-score")[0];
-  var final_score = snake_parts.length;
-  game_score.innerHTML = `
-  <p>Game over!</p>
-  <p>Your final score was: ${final_score}</p>`; // Sets game over message
+  var restart_container = document.createElement("div");
+  restart_container.classList.add("information-restart");
+  game_information.appendChild(restart_container);
 
   var restart_button = document.createElement("button");
-  restart_button.innerText = "New game";
-  restart_button.classList.add("restart-button");
-  restart_button.setAttribute("onclick", "window.location.reload()"); // Starts new game when clicked
-  game_score.appendChild(restart_button);
+  restart_button.innerText = "Nova Igra";
+  restart_button.addEventListener("click", restart);
+  restart_container.appendChild(restart_button);
+
+  disable_clicking(); // Disables clicking on the game board
 }
 
-function update_score() {
-  // Handles score updates
-  var game_score = document.getElementsByClassName("main-game-score")[0];
-  game_score.innerText = `Score: ${snake_parts.length}`;
+function disable_clicking() {
+  var fields = get_fields();
+
+  for (var i = 0; i < 3; i++) {
+    for (var j = 0; j < 3; j++) {
+      fields[i][j].style.opacity = "0.7";
+
+      if (!fields[i][j].classList.contains("unavalible")) {
+        fields[i][j].removeEventListener("click", clicked_field);
+      }
+    }
+  }
 }
 
-function set_score(score) {
-  // Sets score on initial game start
-  var game_score = document.getElementsByClassName("main-game-score")[0];
-  game_score.innerText = `Score: ${score}`;
+function restart() {
+  // Starts new game
+  window.location.reload();
 }
 
-function draw() {
-  // Main game loop
-  move_snake(); // Move snake every frame
-  check_apple(); // Check if the snake ate the apple
+function animate_fields(winning_fields) {
+  // Set winning block's color to green
+  for (var i = 0; i < winning_fields.length; i++) {
+    var field = winning_fields[i];
 
-  if (alive) {
-    setTimeout(function () {
-      window.requestAnimationFrame(draw);
-    }, 1000 / 10); // Start new frame every second if the snake is still alive
+    field.style.background = "green";
+    field.style.opacity = "0.7";
   }
 }

@@ -2,59 +2,58 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: "Roboto", sans-serif;
+  font-family: "Oxygen", sans-serif;
 }
 
-.main-game-board {
+.main-game {
+  margin: 5%;
   display: flex;
   flex-flow: column nowrap;
-  margin: 25px;
 }
 
-.main-game-score {
-  margin: 25px;
-  font-size: 32px;
-}
-
-.game-board-row {
+.board-row-1,
+.board-row-2,
+.board-row-3 {
   display: flex;
   flex-flow: row nowrap;
 }
 
-.game-snake-previous {
-  background: blue;
-}
-.game-board-column {
-  width: 35px;
-  height: 35px;
-  background: white;
+.column {
   color: white;
-  border: 1px solid black;
+  font-size: 28px;
+  min-width: 100px;
+  text-align: center;
+  padding: 25px;
   margin: 1px;
-}
-
-.game-snake-part {
-  background: green;
-  color: green;
-}
-
-.game-apple {
-  background: red;
-  color: red;
-}
-
-.restart-button {
-  background: white;
-  font-size: 32px;
-  padding: 10px;
-  outline: none;
   border: 1px solid black;
 }
 
-.restart-button:hover {
-  background: rgb(225, 225, 255);
+.main-game-information {
+  margin-top: 10px;
+  font-size: 28px;
 }
 
-.disable-selection {
+.information-restart button {
+  margin-top: 10px;
+  font-size: 28px;
+  border: 1px solid black;
+  padding: 5px;
+  border-radius: 5px;
+  outline: none;
+}
+
+.information-restart button:hover {
+  cursor: pointer;
+  background: #dadada;
+}
+
+.disableSelection {
   user-select: none;
+}
+
+@keyframes winning_line {
+  100% {
+    background: green;
+    opacity: 0.3;
+  }
 }
