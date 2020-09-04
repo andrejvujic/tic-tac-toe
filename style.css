@@ -1,0 +1,60 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Roboto", sans-serif;
+}
+
+.main-game-board {
+  display: flex;
+  flex-flow: column nowrap;
+  margin: 25px;
+}
+
+.main-game-score {
+  margin: 25px;
+  font-size: 32px;
+}
+
+.game-board-row {
+  display: flex;
+  flex-flow: row nowrap;
+}
+
+.game-snake-previous {
+  background: blue;
+}
+.game-board-column {
+  width: 35px;
+  height: 35px;
+  background: white;
+  color: white;
+  border: 1px solid black;
+  margin: 1px;
+}
+
+.game-snake-part {
+  background: green;
+  color: green;
+}
+
+.game-apple {
+  background: red;
+  color: red;
+}
+
+.restart-button {
+  background: white;
+  font-size: 32px;
+  padding: 10px;
+  outline: none;
+  border: 1px solid black;
+}
+
+.restart-button:hover {
+  background: rgb(225, 225, 255);
+}
+
+.disable-selection {
+  user-select: none;
+}
